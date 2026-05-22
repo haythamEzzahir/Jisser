@@ -8,19 +8,21 @@ router = APIRouter(prefix="/api/payments", tags=["payments"])
 async def list_payments(auth: dict = Depends(verify_token)):
     from app.database import get_supabase
     supabase = get_supabase()
-    profile = supabase.table("profiles").select("role").eq("id", auth["user_id"]).single().execute()
-    role = profile.data.get("role")
+    profiles = supabase.table("profiles").select("role").eq("id", auth["user_id"]).execute()
+    if not profiles.data:
+        return {"success": True, "data": []}
+    role = profiles.data[0].get("role")
 
     if role == "student":
-        student = supabase.table("student_profiles").select("id").eq("user_id", auth["user_id"]).single().execute()
-        if not student.data:
+        students = supabase.table("student_profiles").select("id").eq("user_id", auth["user_id"]).execute()
+        if not students.data:
             return {"success": True, "data": []}
-        contracts = supabase.table("contracts").select("id").eq("student_id", student.data["id"]).execute()
+        contracts = supabase.table("contracts").select("id").eq("student_id", students.data[0]["id"]).execute()
     elif role == "company":
-        company = supabase.table("company_profiles").select("id").eq("user_id", auth["user_id"]).single().execute()
-        if not company.data:
+        companies = supabase.table("company_profiles").select("id").eq("user_id", auth["user_id"]).execute()
+        if not companies.data:
             return {"success": True, "data": []}
-        contracts = supabase.table("contracts").select("id").eq("company_id", company.data["id"]).execute()
+        contracts = supabase.table("contracts").select("id").eq("company_id", companies.data[0]["id"]).execute()
     else:
         result = supabase.table("payments").select("*").order("due_date", desc=True).execute()
         return {"success": True, "data": result.data}

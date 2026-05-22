@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/lib/api";
 import type { CreditApplication, StudentProfile, Payment, Document } from "@/types";
+import { OnboardingCarousel } from "@/components/student/onboarding-carousel";
 import {
   GraduationCap, CreditCard, TrendingUp, ArrowRight, FileText, CheckCircle2,
   Clock, AlertCircle, UserCheck, Upload, Brain, Handshake, FileSignature,
-  DollarSign, Circle, CheckCircle, Loader2
+  DollarSign, Circle, CheckCircle, Loader2, School, Sparkles
 } from "lucide-react";
 
 const statusLabels: Record<string, string> = {
@@ -94,6 +95,7 @@ export default function StudentDashboard() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [showCarousel, setShowCarousel] = useState(true);
 
   useEffect(() => {
     if (!loading && !profile) router.push("/login");
@@ -123,8 +125,60 @@ export default function StudentDashboard() {
 
   const isRejected = application?.status === "rejected";
 
+  const carouselSteps = [
+    {
+      icon: UserCheck, title: "Complète ton profil",
+      description: "Ajoute tes informations personnelles pour que les entreprises puissent te découvrir.",
+      details: ["Ton école et ta filière", "Ta moyenne générale /20", "Ta ville et une courte bio"],
+      action: { label: "Compléter", href: "/credit-request" },
+    },
+    {
+      icon: FileText, title: "Soumet ta demande de crédit",
+      description: "Choisis le montant mensuel et la durée de financement dont tu as besoin.",
+      details: ["Montant de 1 000 à 5 000 MAD/mois", "Durée de 24 à 48 mois", "Explique ton projet en détail"],
+      action: { label: "Postuler", href: "/credit-request" },
+    },
+    {
+      icon: Upload, title: "Télécharge tes documents",
+      description: "Fournis les pièces justificatives nécessaires à l'évaluation de ton dossier.",
+      details: ["CIN ou passeport", "Relevé de notes et certificat de scolarité", "CV et lettre de motivation"],
+      action: { label: "Documents", href: "/documents" },
+    },
+    {
+      icon: Brain, title: "Évaluation par l'IA",
+      description: "Notre intelligence artificielle analyse ton profil et ta motivation.",
+      details: ["Score académique, potentiel, motivation", "Analyse automatique de tes documents", "Rapport détaillé pour les entreprises"],
+      action: null,
+    },
+    {
+      icon: Handshake, title: "Matching avec une entreprise",
+      description: "Nous trouvons l'entreprise idéale qui correspond à ton profil.",
+      details: ["Suggestions personnalisées par l'IA", "Une entreprise dans ton domaine d'études", "Un investisseur pour ton avenir"],
+      action: null,
+    },
+    {
+      icon: School, title: "Signe ton contrat",
+      description: "Accepte le contrat tripartite et reçois ton premier versement.",
+      details: ["Contrat en français signé électroniquement", "Versement mensuel garanti", "Remboursement en travaillant 2-3 ans"],
+      action: null,
+    },
+    {
+      icon: Sparkles, title: "Prêt pour la réussite !",
+      description: "Tu suis tes études sereinement et tu rembourses après ton diplôme.",
+      details: ["Paiements mensuels automatiques", "Suivi de tes notes chaque semestre", "Stage et emploi garantis chez ton partenaire"],
+      action: null,
+    },
+  ];
+
   return (
-    <div className="space-y-8">
+    <>
+      {showCarousel && !studentProfile && !fetching && (
+        <OnboardingCarousel
+          steps={carouselSteps}
+          onDismiss={() => setShowCarousel(false)}
+        />
+      )}
+      <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-bold">Bon retour, {profile.full_name.split(" ")[0]} !</h1>
@@ -359,5 +413,6 @@ export default function StudentDashboard() {
         </Card>
       )}
     </div>
+    </>
   );
 }

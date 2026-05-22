@@ -9,15 +9,14 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 @router.post("/register")
 async def register(req: RegisterRequest):
     try:
-        supabase = get_anon_client()
-        result = supabase.auth.sign_up({
+        supabase = get_supabase()
+        result = supabase.auth.admin.create_user({
             "email": req.email,
             "password": req.password,
-            "options": {
-                "data": {
-                    "full_name": req.full_name,
-                    "role": req.role.value,
-                }
+            "email_confirm": True,
+            "user_metadata": {
+                "full_name": req.full_name,
+                "role": req.role.value,
             }
         })
         if not result.user:
@@ -53,5 +52,5 @@ async def login(req: LoginRequest):
 @router.get("/me")
 async def get_me(auth: dict = Depends(verify_token)):
     supabase = get_supabase()
-    profile = supabase.table("profiles").select("*").eq("id", auth["user_id"]).single().execute()
-    return {"success": True, "data": profile.data}
+    result = supabase.table("profiles").select("*").eq("id", auth["user_id"]).execute()
+    return {"success": True, "data": result.data[0] if result.data else None}
