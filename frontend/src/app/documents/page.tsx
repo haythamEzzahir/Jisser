@@ -23,6 +23,7 @@ export default function DocumentsPage() {
   const router = useRouter();
   const [docs, setDocs] = useState<Document[]>([]);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [applicationId, setApplicationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !profile) router.push("/login");
@@ -31,6 +32,9 @@ export default function DocumentsPage() {
   useEffect(() => {
     if (!profile) return;
     api.get("/api/students/documents").then((r: any) => setDocs(r.data || [])).catch(() => {});
+    api.get("/api/students/credit-request").then((r: any) => {
+      if (r.data) setApplicationId(r.data.id);
+    }).catch(() => {});
   }, [profile]);
 
   const getStatus = (key: DocType) => {
@@ -52,6 +56,7 @@ export default function DocumentsPage() {
         const fd = new FormData();
         fd.append("file", file);
         fd.append("doc_type", key);
+        if (applicationId) fd.append("related_to", applicationId);
         await api.upload("/api/documents/upload", fd);
         const r = await api.get<any>("/api/students/documents");
         setDocs(r.data || []);

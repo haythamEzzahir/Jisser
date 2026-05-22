@@ -182,7 +182,7 @@ async def generate_payment_schedule(contract_id: str, auth: dict = Depends(admin
     company_payment = {
         "contract_id": contract_id,
         "direction": "company_to_platform",
-        "amount": float(contract.data["company_investment_total"]),
+        "amount": float(contract["company_investment_total"]),
         "due_date": today.isoformat(),
     }
     supabase.table("payments").insert(company_payment).execute()

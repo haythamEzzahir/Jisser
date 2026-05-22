@@ -25,8 +25,8 @@ const steps = [
   {
     icon: Building2, title: "Crée ton profil entreprise",
     desc: "RC, secteur, ville — pour que les étudiants te trouvent",
-    action: { label: "Compléter", href: "/company/dashboard" },
-    check: (p: any) => p?.company_name,
+    action: { label: "Compléter", href: "/company/profile" },
+    check: (cp: any) => cp?.company_name,
   },
   {
     icon: Megaphone, title: "Publie un besoin",
@@ -62,6 +62,7 @@ const steps = [
 export default function CompanyDashboard() {
   const { profile, loading } = useAuth();
   const router = useRouter();
+  const [companyProfile, setCompanyProfile] = useState<any>(null);
   const [roi, setRoi] = useState<ROI | null>(null);
   const [needs, setNeeds] = useState<CompanyNeed[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -75,6 +76,7 @@ export default function CompanyDashboard() {
   useEffect(() => {
     if (!profile) return;
     Promise.all([
+      api.get("/api/companies/profile").then((r: any) => setCompanyProfile(r.data)).catch(() => {}),
       api.get("/api/companies/roi").then((r: any) => setRoi(r.data)).catch(() => {}),
       api.get("/api/companies/needs").then((r: any) => setNeeds(r.data || [])).catch(() => {}),
     ]).finally(() => setFetching(false));
@@ -87,7 +89,7 @@ export default function CompanyDashboard() {
   const currentStepIndex = (() => {
     for (let i = steps.length - 1; i >= 0; i--) {
       const s = steps[i];
-      if (s.check(profile, needs, roi)) return i;
+      if (s.check(companyProfile, needs, roi)) return i;
     }
     return -1;
   })();

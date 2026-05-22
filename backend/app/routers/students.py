@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.database import get_supabase
 from app.models.schemas import StudentProfileCreate, CreditRequestCreate
 from app.dependencies import verify_token
+from postgrest.exceptions import APIError
 
 router = APIRouter(prefix="/api/students", tags=["students"])
 
@@ -15,17 +16,25 @@ async def get_profile(auth: dict = Depends(verify_token)):
     return {"success": True, "data": result.data[0]}
 
 
+def _try_upsert_profile(supabase, data: dict, user_id: str):
+    existing = supabase.table("student_profiles").select("id").eq("user_id", user_id).execute()
+    if existing.data:
+        return supabase.table("student_profiles").update(data).eq("user_id", user_id).execute()
+    return supabase.table("student_profiles").insert({"user_id": user_id, **data}).execute()
+
+
 @router.put("/profile")
 async def update_profile(profile: StudentProfileCreate, auth: dict = Depends(verify_token)):
     supabase = get_supabase()
-    existing = supabase.table("student_profiles").select("id").eq("user_id", auth["user_id"]).execute()
-    if existing.data:
-        result = supabase.table("student_profiles").update(profile.model_dump(exclude_none=True)).eq("user_id", auth["user_id"]).execute()
-    else:
-        result = supabase.table("student_profiles").insert({
-            "user_id": auth["user_id"],
-            **profile.model_dump(exclude_none=True)
-        }).execute()
+    data = profile.model_dump(exclude_none=True)
+    try:
+        result = _try_upsert_profile(supabase, data, auth["user_id"])
+    except APIError as e:
+        if "education_level" in str(e) or "extra_data" in str(e):
+            safe_data = {k: v for k, v in data.items() if k not in ("education_level", "extra_data")}
+            result = _try_upsert_profile(supabase, safe_data, auth["user_id"])
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
     return {"success": True, "data": result.data[0]}
 
 

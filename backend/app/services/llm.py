@@ -1,20 +1,25 @@
-import anthropic
+from openai import OpenAI
 from app.config import settings
 from app.utils.helpers import parse_json_response
 from typing import Optional
 
 
-client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+client = OpenAI(
+    api_key=settings.DEEPSEEK_API_KEY,
+    base_url=settings.LLM_BASE_URL,
+)
 
 
 def _call_llm(system: str, prompt: str, max_tokens: int = 2000) -> str:
-    response = client.messages.create(
+    response = client.chat.completions.create(
         model=settings.LLM_MODEL,
         max_tokens=max_tokens,
-        system=system,
-        messages=[{"role": "user", "content": prompt}],
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
     )
-    return response.content[0].text
+    return response.choices[0].message.content
 
 
 def score_student(
@@ -91,31 +96,21 @@ Return a JSON object with the relevant extracted fields.
 
 
 def extract_image_data(base64_image: str, doc_type: str) -> dict:
-    response = client.messages.create(
+    response = client.chat.completions.create(
         model=settings.LLM_MODEL,
         max_tokens=1500,
-        system="Extract all visible text and data from this document image. Return JSON.",
         messages=[
+            {"role": "system", "content": "Extract all visible text and data from this document image. Return JSON."},
             {
                 "role": "user",
                 "content": [
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "image/jpeg",
-                            "data": base64_image,
-                        },
-                    },
-                    {
-                        "type": "text",
-                        "text": f"Extract all information from this {doc_type} document as JSON.",
-                    },
+                    {"type": "text", "text": f"Extract all information from this {doc_type} document as JSON."},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
                 ],
-            }
+            },
         ],
     )
-    return parse_json_response(response.content[0].text)
+    return parse_json_response(response.choices[0].message.content)
 
 
 def generate_contract_text(

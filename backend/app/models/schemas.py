@@ -93,6 +93,8 @@ class StudentProfileCreate(BaseModel):
     gpa: Optional[float] = None
     city: Optional[str] = None
     bio: Optional[str] = None
+    education_level: Optional[str] = None
+    extra_data: Optional[dict] = None
 
 
 class CompanyProfileCreate(BaseModel):

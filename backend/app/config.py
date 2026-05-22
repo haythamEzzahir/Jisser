@@ -14,8 +14,9 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:3000"
 
-    ANTHROPIC_API_KEY: str = ""
-    LLM_MODEL: str = "claude-sonnet-4-20250514"
+    DEEPSEEK_API_KEY: str = ""
+    LLM_MODEL: str = "deepseek-chat"
+    LLM_BASE_URL: str = "https://api.deepseek.com/v1"
 
     STORAGE_BUCKET: str = "documents"
 

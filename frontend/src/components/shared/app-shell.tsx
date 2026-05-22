@@ -5,9 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { LoadingScreen } from "@/components/shared/loading";
 import {
   LayoutDashboard, FileText, FolderOpen, FileCheck, BarChart3,
-  Users, TrendingUp, Briefcase, Handshake,
+  Users, TrendingUp, Briefcase, Handshake, Building2,
   LogOut, User, ChevronRight
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ const iconMap: Record<string, typeof LayoutDashboard> = {
   "/documents": FolderOpen,
   "/contract": FileCheck,
   "/tracking": BarChart3,
+  "/company/profile": Building2,
   "/company/dashboard": LayoutDashboard,
   "/company/needs": Briefcase,
   "/company/assigned-students": Users,
@@ -52,10 +54,11 @@ const roleLinks = {
 };
 
 function Shell({ children }: { children: React.ReactNode }) {
-  const { profile, logout } = useAuth();
+  const { profile, loading, logout } = useAuth();
   const pathname = usePathname();
   const isPublic = pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/register");
 
+  if (loading) return <LoadingScreen />;
   if (isPublic) return <>{children}</>;
 
   const links = profile ? roleLinks[profile.role] || [] : [];
