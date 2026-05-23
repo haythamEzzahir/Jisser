@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight, X, Check } from "lucide-react";
@@ -11,7 +9,7 @@ interface CarouselStep {
   title: string;
   description: string;
   details: string[];
-  action: { label: string; href: string } | null;
+  action: { label: string; to: string } | null;
 }
 
 export function OnboardingCarousel({
@@ -89,7 +87,7 @@ export function OnboardingCarousel({
                 Commencer <ArrowRight className="h-4 w-4" />
               </Button>
             ) : step.action ? (
-              <Link href={step.action.href}>
+              <Link to={step.action.to}>
                 <Button onClick={onDismiss} className="gap-1">
                   {step.action.label} <ArrowRight className="h-4 w-4" />
                 </Button>

@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState, createContext, useContext } from "react";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
@@ -28,24 +26,38 @@ const AuthContext = createContext<AuthContextType>({
   refreshProfile: async () => {},
 });
 
+const CACHE_KEY = "cached_profile";
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(() => {
+    const cached = localStorage.getItem(CACHE_KEY);
+    return cached ? JSON.parse(cached) : null;
+  });
   const [loading, setLoading] = useState(true);
+
+  const saveProfile = (p: Profile | null) => {
+    setProfile(p);
+    if (p) localStorage.setItem(CACHE_KEY, JSON.stringify(p));
+    else localStorage.removeItem(CACHE_KEY);
+  };
 
   const refreshProfile = async () => {
     try {
       const res = await api.get<{ success: boolean; data: Profile }>("/api/auth/me");
-      setProfile(res.data);
+      saveProfile(res.data);
     } catch {
-      setProfile(null);
+      saveProfile(null);
     }
   };
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (token) {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) setLoading(false);
       refreshProfile().finally(() => setLoading(false));
     } else {
+      saveProfile(null);
       setLoading(false);
     }
   }, []);
@@ -56,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { access_token: string; user: Profile };
     }>("/api/auth/login", { email, password });
     localStorage.setItem("access_token", res.data.access_token);
-    setProfile(res.data.user);
+    saveProfile(res.data.user);
   };
 
   const register = async (
@@ -75,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     localStorage.removeItem("access_token");
+    localStorage.removeItem(CACHE_KEY);
     await supabase.auth.signOut();
     setProfile(null);
   };

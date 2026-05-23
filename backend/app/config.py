@@ -3,7 +3,7 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    APP_NAME: str = "Jesser API"
+    APP_NAME: str = "Jisser API"
     VERSION: str = "1.0.0"
     DEBUG: bool = True
 
