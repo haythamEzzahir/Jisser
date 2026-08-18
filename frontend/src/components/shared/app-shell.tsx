@@ -1,15 +1,13 @@
-"use client";
-
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { useLocation, Link } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { LoadingScreen } from "@/components/shared/loading";
 import {
   LayoutDashboard, FileText, FolderOpen, FileCheck, BarChart3,
-  Users, TrendingUp, Briefcase, Handshake,
+  Users, TrendingUp, Briefcase, Handshake, Building2,
   LogOut, User, ChevronRight
 } from "lucide-react";
+import logo from "/logo.png";
 
 const iconMap: Record<string, typeof LayoutDashboard> = {
   "/dashboard": LayoutDashboard,
@@ -17,6 +15,7 @@ const iconMap: Record<string, typeof LayoutDashboard> = {
   "/documents": FolderOpen,
   "/contract": FileCheck,
   "/tracking": BarChart3,
+  "/company/profile": Building2,
   "/company/dashboard": LayoutDashboard,
   "/company/needs": Briefcase,
   "/company/assigned-students": Users,
@@ -28,7 +27,7 @@ const iconMap: Record<string, typeof LayoutDashboard> = {
   "/admin/payments": BarChart3,
 };
 
-const roleLinks = {
+const roleLinks: Record<string, { label: string; href: string }[]> = {
   student: [
     { label: "Tableau de bord", href: "/dashboard" },
     { label: "Demande de crédit", href: "/credit-request" },
@@ -51,11 +50,12 @@ const roleLinks = {
   ],
 };
 
-function Shell({ children }: { children: React.ReactNode }) {
-  const { profile, logout } = useAuth();
-  const pathname = usePathname();
+export function Shell({ children }: { children: React.ReactNode }) {
+  const { profile, loading, logout } = useAuth();
+  const { pathname } = useLocation();
   const isPublic = pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/register");
 
+  if (loading) return <LoadingScreen />;
   if (isPublic) return <>{children}</>;
 
   const links = profile ? roleLinks[profile.role] || [] : [];
@@ -64,9 +64,9 @@ function Shell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <header className="fixed top-0 z-50 flex h-14 w-full items-center border-b bg-background/80 backdrop-blur-lg">
         <div className="flex w-64 items-center px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Jesser" width={28} height={28} className="h-7 w-7" />
-            <span className="font-heading text-base font-bold tracking-tight">Jesser</span>
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="Jisser" className="h-7 w-7" />
+            <span className="font-heading text-base font-bold tracking-tight">Jisser</span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end gap-4 px-4">
@@ -94,7 +94,7 @@ function Shell({ children }: { children: React.ReactNode }) {
                   return (
                     <Link
                       key={link.href}
-                      href={link.href}
+                      to={link.href}
                       className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                         isActive
                           ? "bg-primary/10 text-primary shadow-sm"
@@ -129,13 +129,5 @@ function Shell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
-  );
-}
-
-export function AppShell({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthProvider>
-      <Shell>{children}</Shell>
-    </AuthProvider>
   );
 }

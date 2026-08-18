@@ -44,11 +44,11 @@ async def list_applications(status: str = None, auth: dict = Depends(admin_only)
 @router.get("/applications/{application_id}")
 async def get_application_detail(application_id: str, auth: dict = Depends(admin_only)):
     supabase = get_supabase()
-    app = supabase.table("credit_applications").select("*, student_profiles!inner(*, profiles!inner(full_name, email))").eq("id", application_id).single().execute()
-    if not app.data:
+    result = supabase.table("credit_applications").select("*, student_profiles!inner(*, profiles!inner(full_name, email))").eq("id", application_id).execute()
+    if not result.data:
         raise HTTPException(status_code=404, detail="Application not found")
     docs = supabase.table("documents").select("*").eq("related_to", application_id).execute()
-    return {"success": True, "data": {**app.data, "documents": docs.data}}
+    return {"success": True, "data": {**result.data[0], "documents": docs.data}}
 
 
 @router.post("/applications/{application_id}/score")
@@ -155,11 +155,12 @@ async def list_payments(auth: dict = Depends(admin_only)):
 @router.post("/payments/generate-schedule")
 async def generate_payment_schedule(contract_id: str, auth: dict = Depends(admin_only)):
     supabase = get_supabase()
-    contract = supabase.table("contracts").select("*").eq("id", contract_id).single().execute()
-    if not contract.data:
+    result = supabase.table("contracts").select("*").eq("id", contract_id).execute()
+    if not result.data:
         raise HTTPException(status_code=404, detail="Contract not found")
-    monthly = float(contract.data["monthly_amount"])
-    duration = int(contract.data["duration_months"])
+    contract = result.data[0]
+    monthly = float(contract["monthly_amount"])
+    duration = int(contract["duration_months"])
     from datetime import date, timedelta
     import calendar
     today = date.today()
@@ -181,7 +182,7 @@ async def generate_payment_schedule(contract_id: str, auth: dict = Depends(admin
     company_payment = {
         "contract_id": contract_id,
         "direction": "company_to_platform",
-        "amount": float(contract.data["company_investment_total"]),
+        "amount": float(contract["company_investment_total"]),
         "due_date": today.isoformat(),
     }
     supabase.table("payments").insert(company_payment).execute()

@@ -6,12 +6,13 @@ from datetime import datetime
 async def trigger_scoring(application_id: str) -> dict:
     supabase = get_supabase()
 
-    app = supabase.table("credit_applications").select("*").eq("id", application_id).single().execute()
+    app = supabase.table("credit_applications").select("*").eq("id", application_id).execute()
     if not app.data:
         raise ValueError("Application not found")
+    app_data = app.data[0]
 
-    student = supabase.table("student_profiles").select("*").eq("id", app.data["student_id"]).single().execute()
-    profile = student.data or {}
+    student = supabase.table("student_profiles").select("*").eq("id", app_data["student_id"]).execute()
+    profile = student.data[0] if student.data else {}
 
     documents = supabase.table("documents").select("*").eq("related_to", application_id).execute()
     docs_text = {}
@@ -21,7 +22,7 @@ async def trigger_scoring(application_id: str) -> dict:
 
     result = await score_student(
         profile=profile,
-        justification=app.data.get("justification", ""),
+        justification=app_data.get("justification", ""),
         documents_text=docs_text or None,
     )
 
