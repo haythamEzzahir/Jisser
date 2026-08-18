@@ -216,14 +216,14 @@ export default function CompanyDashboard() {
                             </div>
                             {step.action && !done && (
                               <Button asChild size="sm" variant={i === 0 ? "secondary" : "outline"}>
-                                <Link to={step.action.href}>
+                                <Link to={step.action.to}>
                                   {step.action.label} <ArrowRight className="ml-1 h-3 w-3" />
                                 </Link>
                               </Button>
                             )}
                             {done && step.action && (
                               <Button asChild size="sm" variant="ghost">
-                                <Link to={step.action.href}>
+                                <Link to={step.action.to}>
                                   Gérer <ArrowRight className="ml-1 h-3 w-3" />
                                 </Link>
                               </Button>

@@ -37,7 +37,7 @@ const steps = [
     icon: Upload, title: "Télécharge tes documents",
     desc: "CIN, relevé de notes, CV, lettre de motivation",
     action: { label: "Documents", to: "/documents" },
-    check: (_s: StudentProfile | null, _a: CreditApplication | null, _p: Payment[], _d: Document[]) => false,
+    check: (_s: StudentProfile | null, _a: CreditApplication | null, _p: Payment[], _d: Document[]) => true,
     skipIfNoApp: true,
   },
   {

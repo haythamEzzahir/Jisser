@@ -17,6 +17,10 @@ const requiredDocs: { key: DocType; label: string }[] = [
   { key: "photo", label: "Photo d'identité" },
 ];
 
+const DEMO_MODE = true;
+
+const demoDocs: DocType[] = ["cin", "transcript", "enrollment_certificate", "cv", "motivation_letter", "photo"];
+
 export default function DocumentsPage() {
   const { profile, loading } = useAuth();
   const navigate = useNavigate();
@@ -30,6 +34,7 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     if (!profile) return;
+    if (DEMO_MODE) return;
     api.get("/api/students/documents").then((r: any) => setDocs(r.data || [])).catch(() => {});
     api.get("/api/students/credit-request").then((r: any) => {
       if (r.data) setApplicationId(r.data.id);
@@ -37,6 +42,7 @@ export default function DocumentsPage() {
   }, [profile]);
 
   const getStatus = (key: DocType) => {
+    if (DEMO_MODE) return { label: "Uploadé", color: "secondary" as const };
     const doc = docs.find((d) => d.doc_type === key);
     if (!doc) return { label: "Manquant", color: "outline" as const };
     if (doc.verified) return { label: "Validé", color: "default" as const };
@@ -44,6 +50,7 @@ export default function DocumentsPage() {
   };
 
   const handleUpload = async (key: DocType) => {
+    if (DEMO_MODE) return;
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*,.pdf";
